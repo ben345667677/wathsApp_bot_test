@@ -1,0 +1,47 @@
+{
+    "name": "whatsapp-bot",
+    "version": "1.0.0",
+    "description": "בוט וואטסאפ לניהול קבוצות ושמירת קבצים",
+    "main": "simple_bot.js",
+    "scripts": {
+        "start": "node simple_bot.js",
+        "dev": "nodemon simple_bot.js",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
+    },
+    "keywords": [
+        "whatsapp",
+        "bot",
+        "baileys",
+        "hebrew",
+        "file-management"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@whiskeysockets/baileys": "^7.0.0-rc.2",
+        "qrcode": "^1.5.4",
+        "mysql2": "^3.6.5"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0",
+        "eslint": "^8.57.0",
+        "audit-ci": "^6.6.1"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "collectCoverageFrom": [
+            "simple_bot.js",
+            "!node_modules/**"
+        ],
+        "coverageDirectory": "coverage",
+        "coverageReporters": [
+            "text",
+            "lcov",
+            "html"
+        ]
+    }
+}

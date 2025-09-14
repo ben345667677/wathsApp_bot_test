@@ -1,0 +1,158 @@
+# Removed version as it's obsolete in newer Docker Compose
+
+services:
+  # MySQL Database
+  mysql-db:
+    image: mysql:8.0
+    container_name: whatsapp-bot-mysql
+    restart: unless-stopped
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword123!
+      MYSQL_DATABASE: whatsapp_bot
+      MYSQL_USER: botuser
+      MYSQL_PASSWORD: botpassword123!
+      TZ: Asia/Jerusalem
+    
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    networks:
+      - bot-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "botuser", "-pbotpassword123!"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # WhatsApp Bot Application
+  whatsapp-bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-bot-app
+    restart: unless-stopped
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    
+    # Environment variables
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Jerusalem
+      - DB_HOST=mysql-db
+      - DB_USER=botuser
+      - DB_PASSWORD=botpassword123!
+      - DB_NAME=whatsapp_bot
+    
+    # Persistent volumes for data
+    volumes:
+      - ./people:/app/people
+      - ./qr:/app/qr
+      - ./auth:/app/auth
+    
+    networks:
+      - bot-network
+    
+    # Network settings (optional - uncomment if needed)
+    # ports:
+    #   - "3000:3000"
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Bot is running')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # Optional: phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: whatsapp-bot-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql-db
+    
+    environment:
+      PMA_HOST: mysql-db
+      PMA_USER: botuser
+      PMA_PASSWORD: botpassword123!
+      MYSQL_ROOT_PASSWORD: rootpassword123!
+    
+    ports:
+      - "8080:80"
+    
+    networks:
+      - bot-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  # Optional: Watchtower for auto-updates
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --interval 30 --cleanup
+  #   restart: unless-stopped
+  #   networks:
+  #     - bot-network
+
+# Create custom network
+networks:
+  bot-network:
+    driver: bridge
+    name: whatsapp-bot-network
+
+# Define volumes for persistence
+volumes:
+  mysql_data:
+    driver: local
+    name: whatsapp-bot-mysql-data
+  bot-data:
+    driver: local
+    name: whatsapp-bot-data

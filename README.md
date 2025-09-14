@@ -10,6 +10,9 @@
 - 🗂️ ארגון קבצים לפי משתמש
 - 🔄 תפריטים אינטראקטיביים
 - 🔐 בדיקות אבטחה ותקינות
+- 🗄️ דאטאבייס MySQL מלא
+- 📊 ניהול נתונים מתקדם
+- 🌐 ממשק ניהול phpMyAdmin
 
 ## התקנה
 
@@ -19,7 +22,63 @@ npm install
 
 ## הרצה
 
+### הרצה עם Docker (מומלץ)
+
+**Linux/Mac:**
 ```bash
+# הרצה אוטומטית עם סקריפט
+chmod +x docker-start.sh
+./docker-start.sh
+
+# או ידנית
+docker-compose up --build -d
+```
+
+**Windows:**
+```cmd
+# הרצה אוטומטית עם סקריפט
+docker-start.bat
+
+# או ידנית
+docker-compose up --build -d
+```
+
+### פקודות Docker שימושיות
+```bash
+# צפייה בלוגים
+docker-compose logs -f
+
+# צפייה בלוגי הבוט בלבד
+docker-compose logs -f whatsapp-bot
+
+# צפייה בלוגי הדאטאבייס
+docker-compose logs -f mysql-db
+
+# עצירת הבוט
+docker-compose down
+
+# הפעלה מחדש
+docker-compose restart
+
+# בדיקת סטטוס
+docker-compose ps
+
+# גישה למסוף הדאטאבייס
+docker-compose exec mysql-db mysql -u botuser -p whatsapp_bot
+```
+
+### ניהול דאטאבייס
+- **phpMyAdmin**: גש ל-`http://localhost:8080` לניהול הדאטאבייס
+- **משתמש**: botuser
+- **סיסמה**: botpassword123!
+- **דאטאבייס**: whatsapp_bot
+
+### הרצה ללא Docker
+
+```bash
+# התקנת חבילות
+npm install
+
 # הרצה רגילה
 npm start
 
@@ -88,6 +147,11 @@ npm run lint:fix
 
 ```
 ├── simple_bot.js          # הבוט הראשי
+├── Dockerfile             # הגדרות Docker
+├── docker-compose.yml     # הגדרות Docker Compose
+├── docker-start.sh        # סקריפט הפעלה Linux/Mac
+├── docker-start.bat       # סקריפט הפעלה Windows
+├── .dockerignore          # קבצים להתעלמות בDocker
 ├── tests/
 │   └── bot.test.js        # טסטים
 ├── .github/

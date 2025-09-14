@@ -1,0 +1,66 @@
+# Node modules
+node_modules
+npm-debug.log*
+
+# Test files
+tests
+coverage
+*.test.js
+
+# Development files
+.git
+.gitignore
+.eslintcache
+.nyc_output
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn files
+.yarn-integrity
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Documentation
+README.md
+docs/
+
+# GitHub files
+.github/
+
+# Docker files (avoid recursion)
+Dockerfile
+docker-compose.yml
+.dockerignore
