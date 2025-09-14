@@ -1,5 +1,5 @@
 # Use official Node.js runtime as base image
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set working directory in container
 WORKDIR /app
@@ -11,7 +11,7 @@ RUN mkdir -p people qr auth
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy application files
 COPY simple_bot.js ./

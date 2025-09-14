@@ -771,9 +771,20 @@ async function startBot() {
             if (qr) {
                 const qrPath = path.join(qrDir, 'whatsapp-qr.png');
                 try {
+                    // Remove old QR code if it exists
+                    if (fs.existsSync(qrPath)) {
+                        fs.unlinkSync(qrPath);
+                        log.info('Removed old QR code');
+                    }
+
+                    // Generate new QR code
                     await qrcode.toFile(qrPath, qr, {
                         width: 300,
-                        margin: 2
+                        margin: 2,
+                        color: {
+                            dark: '#000000',
+                            light: '#FFFFFF'
+                        }
                     });
                     log.success(`QR code saved to: ${qrPath}`);
                     log.info('Scan the QR code with your phone to connect');

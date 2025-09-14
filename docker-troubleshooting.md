@@ -83,10 +83,12 @@ SELECT * FROM bot_settings;
 #### שגיאת חיבור לדאטאבייס
 ```
 Error: connect ECONNREFUSED 127.0.0.1:3306
+Error: connect ECONNREFUSED 127.0.0.1:3007
 ```
 **פתרון**: ודא ש-MySQL Service רץ:
 - Windows: Services → MySQL80 → Start
 - או: `net start mysql80`
+- אם השתמשת בפורט 3007: ודא שהפורט פנוי
 
 #### שגיאת אימות
 ```
@@ -97,5 +99,8 @@ Error: Access denied for user 'botuser'@'localhost'
 SELECT user, host FROM mysql.user WHERE user = 'botuser';
 ```
 
-#### יציאה 3306 תפוסה
-**פתרון**: שנה פורט בקובץ my.ini או עצור שירותים אחרים.
+#### יציאה 3306 או 3007 תפוסה
+**פתרון**: 
+- בדוק איזה שירותים משתמשים בפורט: `netstat -an | findstr :3306` או `netstat -an | findstr :3007`
+- שנה פורט בקובץ my.ini או עצור שירותים אחרים
+- בפרויקט זה MySQL פועל על פורט 3007 כדי למנוע התנגשויות
