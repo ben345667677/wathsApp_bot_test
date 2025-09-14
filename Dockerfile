@@ -36,9 +36,9 @@ RUN chown -R botuser:botuser /app
 # Switch to non-root user
 USER botuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD node -e "console.log('Bot is running')" || exit 1
+# Health check - simplified
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
+    CMD ps aux | grep -q '[n]ode.*simple_bot.js' || exit 1
 
 # Start the application
 CMD ["node", "simple_bot.js"]

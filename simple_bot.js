@@ -880,8 +880,10 @@ if (typeof module !== 'undefined' && module.exports) {
         findUserGroup,
         startBot
     };
-} else {
-    // Start the bot only if not in test environment
+}
+
+// Start the bot only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
     console.log('🚀 Simple WhatsApp Bot v2.0');
     console.log('📱 Clean and Simple Logic');
     startBot();

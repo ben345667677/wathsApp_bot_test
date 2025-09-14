@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS whatsapp_bot CHARACTER SET utf8mb4 COLLATE utf8mb4
 USE whatsapp_bot;
 
 -- Groups table
-CREATE TABLE IF NOT EXISTS groups (
+CREATE TABLE IF NOT EXISTS `groups` (
     id VARCHAR(100) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     creator VARCHAR(50) NOT NULL,

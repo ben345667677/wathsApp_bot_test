@@ -51,28 +51,28 @@ const Groups = {
     // Get all groups
     async getAll() {
         const db = getDB();
-        const [rows] = await db.execute('SELECT * FROM groups ORDER BY created DESC');
+        const [rows] = await db.execute('SELECT * FROM `groups` ORDER BY created DESC');
         return rows;
     },
 
     // Get group by ID
     async getById(groupId) {
         const db = getDB();
-        const [rows] = await db.execute('SELECT * FROM groups WHERE id = ?', [groupId]);
+        const [rows] = await db.execute('SELECT * FROM `groups` WHERE id = ?', [groupId]);
         return rows[0] || null;
     },
 
     // Get groups by creator
     async getByCreator(creator) {
         const db = getDB();
-        const [rows] = await db.execute('SELECT * FROM groups WHERE creator = ? ORDER BY created DESC', [creator]);
+        const [rows] = await db.execute('SELECT * FROM `groups` WHERE creator = ? ORDER BY created DESC', [creator]);
         return rows;
     },
 
     // Get active groups by creator
     async getActiveByCreator(creator) {
         const db = getDB();
-        const [rows] = await db.execute('SELECT * FROM groups WHERE creator = ? AND status = "active" ORDER BY created DESC', [creator]);
+        const [rows] = await db.execute('SELECT * FROM `groups` WHERE creator = ? AND status = "active" ORDER BY created DESC', [creator]);
         return rows;
     },
 
@@ -80,7 +80,7 @@ const Groups = {
     async create(groupId, name, creator) {
         const db = getDB();
         await db.execute(
-            'INSERT INTO groups (id, name, creator, status) VALUES (?, ?, ?, "active")',
+            'INSERT INTO `groups` (id, name, creator, status) VALUES (?, ?, ?, "active")',
             [groupId, name, creator]
         );
         return await this.getById(groupId);
@@ -91,7 +91,7 @@ const Groups = {
         const db = getDB();
         const leftAt = status === 'inactive' ? new Date() : null;
         await db.execute(
-            'UPDATE groups SET status = ?, left_at = ? WHERE id = ?',
+            'UPDATE `groups` SET status = ?, left_at = ? WHERE id = ?',
             [status, leftAt, groupId]
         );
         return await this.getById(groupId);
@@ -101,7 +101,7 @@ const Groups = {
     async reactivate(groupId, newName) {
         const db = getDB();
         await db.execute(
-            'UPDATE groups SET status = "active", name = ?, reactivated = NOW(), left_at = NULL WHERE id = ?',
+            'UPDATE `groups` SET status = "active", name = ?, reactivated = NOW(), left_at = NULL WHERE id = ?',
             [newName, groupId]
         );
         return await this.getById(groupId);
