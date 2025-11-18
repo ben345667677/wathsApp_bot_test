@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+
+# WhatsApp authentication data
+.wwebjs_auth/
+.wwebjs_cache/
+
+# QR Code image
+whatsapp-qr.png
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
