@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(node bot.js:*)"
+      "Bash(node bot.js:*)",
+      "Bash(docker-compose up:*)"
     ],
     "deny": [],
     "ask": []

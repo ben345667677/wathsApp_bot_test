@@ -1,0 +1,41 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# קבצי אימות
+.wwebjs_auth
+.wwebjs_cache
+whatsapp-qr.png
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Environment
+.env
+.env.local
+
+# תיקיות זמניות
+tmp
+temp
+bot-data
+bot-cache

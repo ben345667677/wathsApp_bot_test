@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  whatsapp-bot:
+    build: .
+    container_name: quizsense-whatsapp-bot
+    restart: unless-stopped
+    ports:
+      - "5556:5556"  # פורט לשרת QR
+    volumes:
+      - ./bot-data:/app/.wwebjs_auth  # שמירת נתוני אימות
+      - ./bot-cache:/app/.wwebjs_cache  # שמירת מטמון
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Jerusalem
+    # הרצה עם הרשאות מתאימות
+    user: "node"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN  # נדרש עבור Chromium
+    shm_size: '2gb'  # זיכרון משותף עבור Chromium
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

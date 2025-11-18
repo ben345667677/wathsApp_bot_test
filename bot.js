@@ -2,6 +2,13 @@ const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const QRCode = require("qrcode");
 const fs = require("fs");
+const http = require("http");
+const { exec } = require("child_process");
+
+// הגדרות שרת QR
+const QR_PORT = 5556;
+let qrServer = null;
+let currentQRCode = null;
 
 // יצירת לקוח WhatsApp עם אימות מקומי (שומר את ההתחברות)
 const client = new Client({
@@ -15,15 +22,169 @@ const client = new Client({
       "--disable-accelerated-2d-canvas",
       "--no-first-run",
       "--no-zygote",
-      "--disable-gpu"
+      "--disable-gpu",
     ],
   },
   // אופטימיזציות למהירות
   webVersionCache: {
     type: "remote",
-    remotePath: "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
+    remotePath:
+      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
   },
 });
+
+// פונקציה ליצירת שרת QR זמני
+function startQRServer() {
+  return new Promise((resolve) => {
+    qrServer = http.createServer(async (req, res) => {
+      if (req.url === "/") {
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+
+        if (currentQRCode) {
+          try {
+            // המרת QR לתמונה base64
+            const qrImage = await QRCode.toDataURL(currentQRCode, {
+              width: 400,
+              margin: 2,
+            });
+
+            const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp QR Code - QuizSense Bot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 500px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    .qr-container {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    img {
+      display: block;
+      border-radius: 10px;
+    }
+    .instructions {
+      margin-top: 30px;
+      color: #444;
+      text-align: right;
+      line-height: 1.8;
+    }
+    .step {
+      background: #f0f0f0;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-right: 4px solid #667eea;
+    }
+    .footer {
+      margin-top: 20px;
+      color: #888;
+      font-size: 14px;
+    }
+    .spinner {
+      margin-top: 20px;
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 QuizSense WhatsApp Bot</h1>
+    <p class="subtitle">סרוק את הקוד להתחברות</p>
+
+    <div class="qr-container">
+      <img src="${qrImage}" alt="WhatsApp QR Code" />
+    </div>
+
+    <div class="instructions">
+      <div class="step">📱 <strong>שלב 1:</strong> פתח את WhatsApp בטלפון</div>
+      <div class="step">⚙️ <strong>שלב 2:</strong> עבור להגדרות > מכשירים מקושרים</div>
+      <div class="step">📷 <strong>שלב 3:</strong> לחץ על "קשר מכשיר" וסרוק את הקוד</div>
+    </div>
+
+    <div class="spinner">⏳ ממתין לסריקה...</div>
+    <div class="footer">הדף יסגר אוטומטית לאחר התחברות מוצלחת</div>
+  </div>
+
+  <script>
+    // בדיקה כל 2 שניות אם השרת עדיין פעיל
+    const checkInterval = setInterval(() => {
+      fetch('/ping').catch(() => {
+        // השרת נסגר - הסריקה הצליחה!
+        clearInterval(checkInterval);
+        document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h1 style="color:#4CAF50;">✅ התחברות הצליחה!</h1><p>הדף ייסגר עכשיו...</p></div>';
+        setTimeout(() => window.close(), 2000);
+      });
+    }, 2000);
+  </script>
+</body>
+</html>`;
+            res.end(html);
+          } catch (err) {
+            res.end("<h1>שגיאה ביצירת QR Code</h1>");
+          }
+        } else {
+          res.end("<h1>אין QR Code זמין כרגע</h1>");
+        }
+      } else if (req.url === "/ping") {
+        res.writeHead(200);
+        res.end("OK");
+      } else {
+        res.writeHead(404);
+        res.end("Not Found");
+      }
+    });
+
+    qrServer.listen(QR_PORT, () => {
+      console.log(`\n🌐 שרת QR פועל על: http://localhost:${QR_PORT}`);
+      resolve();
+    });
+  });
+}
+
+// פונקציה לסגירת שרת QR
+function stopQRServer() {
+  if (qrServer) {
+    qrServer.close(() => {
+      console.log("🔒 שרת QR נסגר");
+    });
+    qrServer = null;
+    currentQRCode = null;
+  }
+}
 
 // הגדרות הבוט
 const CONFIG = {
@@ -43,21 +204,29 @@ client.on("qr", async (qr) => {
   console.log("📱 סרוק את קוד ה-QR בעזרת WhatsApp:");
   qrcode.generate(qr, { small: true });
 
-  // שמירת QR Code כתמונה בתקייה הנוכחית
-  const qrImagePath = "./whatsapp-qr.png";
-  try {
-    await QRCode.toFile(qrImagePath, qr, {
-      width: 300,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    });
-    console.log(`\n✅ קוד QR נשמר בקובץ: ${qrImagePath}`);
-    console.log("🖼️  פתח את הקובץ וסרוק אותו מהטלפון!");
-  } catch (err) {
-    console.error("❌ שגיאה בשמירת קוד QR:", err);
-  }
+  // שמירת ה-QR הנוכחי
+  currentQRCode = qr;
+
+  // הפעלת שרת QR
+  await startQRServer();
+
+  // פתיחת הדפדפן אוטומטית
+  const url = `http://localhost:${QR_PORT}`;
+  console.log(`\n🌐 פותח דפדפן: ${url}`);
+
+  // פקודת פתיחת דפדפן לפי מערכת הפעלה
+  const command =
+    process.platform === "win32"
+      ? `start ${url}`
+      : process.platform === "darwin"
+      ? `open ${url}`
+      : `xdg-open ${url}`;
+
+  exec(command, (err) => {
+    if (err) {
+      console.log(`\n⚠️  לא ניתן לפתוח דפדפן אוטומטית. פתח ידנית: ${url}`);
+    }
+  });
 
   console.log(
     "\n🔍 פתח את WhatsApp בטלפון > הגדרות > מכשירים מקושרים > קשר מכשיר"
@@ -79,7 +248,10 @@ client.on("loading_screen", (percent, message) => {
 client.on("authenticated", () => {
   console.log("🔐 אימות הצליח!");
 
-  // מחיקת קובץ ה-QR אחרי התחברות מוצלחת
+  // סגירת שרת QR אחרי התחברות מוצלחת
+  stopQRServer();
+
+  // מחיקת קובץ ה-QR אם קיים (מגירסאות ישנות)
   const qrImagePath = "./whatsapp-qr.png";
   if (fs.existsSync(qrImagePath)) {
     fs.unlinkSync(qrImagePath);
