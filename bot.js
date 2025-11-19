@@ -297,8 +297,8 @@ client.on("qr", async (qr) => {
     process.platform === "win32"
       ? `start ${url}`
       : process.platform === "darwin"
-      ? `open ${url}`
-      : `xdg-open ${url}`;
+        ? `open ${url}`
+        : `xdg-open ${url}`;
 
   exec(command, (err) => {
     if (err) {
@@ -309,7 +309,7 @@ client.on("qr", async (qr) => {
   console.log(
     `\n🔍 פתח את WhatsApp בטלפון > הגדרות > מכשירים מקושרים > קשר מכשיר`
   );
-  console.log(`⏰ יש לך ${QR_TIMEOUT/1000} שניות לסרוק לפני שייווצר QR חדש`);
+  console.log(`⏰ יש לך ${QR_TIMEOUT / 1000} שניות לסרוק לפני שייווצר QR חדש`);
 });
 
 // אירוע: הבוט מוכן לפעולה
