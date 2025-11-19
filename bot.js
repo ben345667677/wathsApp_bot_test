@@ -7,8 +7,12 @@ const { exec } = require("child_process");
 
 // הגדרות שרת QR
 const QR_PORT = 5556;
+const QR_TIMEOUT = 120000; // 2 דקות במילישניות
 let qrServer = null;
 let currentQRCode = null;
+let qrTimeout = null;
+let qrRetryCount = 0;
+const MAX_RETRIES = 10; // מקסימום 10 ניסיונות
 
 // יצירת לקוח WhatsApp עם אימות מקומי (שומר את ההתחברות)
 const client = new Client({
@@ -135,16 +139,45 @@ function startQRServer() {
       <div class="step">📷 <strong>שלב 3:</strong> לחץ על "קשר מכשיר" וסרוק את הקוד</div>
     </div>
 
-    <div class="spinner">⏳ ממתין לסריקה...</div>
-    <div class="footer">הדף יסגר אוטומטית לאחר התחברות מוצלחת</div>
+    <div class="spinner">
+      <div id="countdown">⏳ ממתין לסריקה... <span id="timer">120</span> שניות</div>
+      <div id="retry-info" style="margin-top:10px;color:#888;font-size:12px;">ניסיון <span id="attempt">1</span> מתוך 10</div>
+    </div>
+    <div class="footer">הדף יסגר אוטומטית לאחר התחברות מוצלחת • ייווצר QR חדש אחרי 2 דקות</div>
   </div>
 
   <script>
+    // הגדרת טיימר ספירה לאחור
+    let timeLeft = 120;
+    const timerElement = document.getElementById('timer');
+
+    const countdownInterval = setInterval(() => {
+      timeLeft--;
+      timerElement.textContent = timeLeft;
+
+      if (timeLeft <= 10) {
+        timerElement.style.color = '#ff4444';
+        timerElement.style.fontWeight = 'bold';
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+        document.querySelector('#countdown').innerHTML = '⏰ זמן נגמר - מייצר QR חדש...';
+        document.querySelector('#retry-info').innerHTML = 'מרענן את הדף כדי לראות QR חדש';
+
+        // רענון אוטומטי אחרי 3 שניות
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
+    }, 1000);
+
     // בדיקה כל 2 שניות אם השרת עדיין פעיל
     const checkInterval = setInterval(() => {
       fetch('/ping').catch(() => {
         // השרת נסגר - הסריקה הצליחה!
         clearInterval(checkInterval);
+        clearInterval(countdownInterval);
         document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h1 style="color:#4CAF50;">✅ התחברות הצליחה!</h1><p>הדף ייסגר עכשיו...</p></div>';
         setTimeout(() => window.close(), 2000);
       });
@@ -199,9 +232,51 @@ const CONFIG = {
   },
 };
 
+// פונקציה להפעלת טיימר פג תוקף QR
+function startQRTimeout() {
+  // ניקוי טיימר קודם אם קיים
+  if (qrTimeout) {
+    clearTimeout(qrTimeout);
+  }
+
+  qrTimeout = setTimeout(() => {
+    if (qrRetryCount < MAX_RETRIES) {
+      qrRetryCount++;
+      console.log(`\n⏰ תם הזמן לסריקה (${qrRetryCount}/${MAX_RETRIES}) - מנסה שוב...`);
+      console.log(`🔄 מאלץ יצירת QR חדש...`);
+
+      // סגירת השרת הנוכחי
+      stopQRServer();
+
+      // איפוס הלקוח כדי לקבל QR חדש
+      client.resetState();
+
+      // הפעלה מחדש של האתחול
+      setTimeout(() => {
+        client.initialize();
+      }, 2000);
+    } else {
+      console.log(`\n❌ הגעת למקסימום ניסיונות (${MAX_RETRIES}) - מפסיק לנסות`);
+      console.log("🔄 אפשר להפעיל מחדש את הקונטיינר כדי לנסות שוב");
+
+      // סגירת השרת
+      stopQRServer();
+    }
+  }, QR_TIMEOUT);
+}
+
+// פונקציה לעצירת טיימר QR
+function stopQRTimeout() {
+  if (qrTimeout) {
+    clearTimeout(qrTimeout);
+    qrTimeout = null;
+  }
+  qrRetryCount = 0; // איפוס מונה ניסיונות
+}
+
 // אירוע: יצירת QR Code לסריקה
 client.on("qr", async (qr) => {
-  console.log("📱 סרוק את קוד ה-QR בעזרת WhatsApp:");
+  console.log(`📱 סרוק את קוד ה-QR בעזרת WhatsApp (ניסיון ${qrRetryCount + 1}):`);
   qrcode.generate(qr, { small: true });
 
   // שמירת ה-QR הנוכחי
@@ -209,6 +284,9 @@ client.on("qr", async (qr) => {
 
   // הפעלת שרת QR
   await startQRServer();
+
+  // הפעלת טיימר פג תוקף
+  startQRTimeout();
 
   // פתיחת הדפדפן אוטומטית
   const url = `http://localhost:${QR_PORT}`;
@@ -229,8 +307,9 @@ client.on("qr", async (qr) => {
   });
 
   console.log(
-    "\n🔍 פתח את WhatsApp בטלפון > הגדרות > מכשירים מקושרים > קשר מכשיר"
+    `\n🔍 פתח את WhatsApp בטלפון > הגדרות > מכשירים מקושרים > קשר מכשיר`
   );
+  console.log(`⏰ יש לך ${QR_TIMEOUT/1000} שניות לסרוק לפני שייווצר QR חדש`);
 });
 
 // אירוע: הבוט מוכן לפעולה
@@ -247,6 +326,9 @@ client.on("loading_screen", (percent, message) => {
 // אירוע: אימות הצליח
 client.on("authenticated", () => {
   console.log("🔐 אימות הצליח!");
+
+  // עצירת טיימר QR
+  stopQRTimeout();
 
   // סגירת שרת QR אחרי התחברות מוצלחת
   stopQRServer();
