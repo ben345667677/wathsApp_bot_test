@@ -47,10 +47,5 @@ RUN mkdir -p .wwebjs_auth .wwebjs_cache && \
 # לא מחליף משתמש - נשאר כ-root כדי למנוע בעיות הרשאות
 # USER node
 
-# יצירת entrypoint ספציפי כדי לעקוף בעיות הרשאות
-RUN echo '#!/bin/sh\nexec node "$@"' > /usr/local/bin/docker-entrypoint.sh && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# הרצת הבוט
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# הרצת הבוט ישירות
 CMD ["node", "bot.js"]
