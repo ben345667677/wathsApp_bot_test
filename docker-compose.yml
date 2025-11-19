@@ -14,10 +14,10 @@ services:
     # הרצה עם הרשאות מתאימות
     # security_opt:
     #   - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - SYS_ADMIN  # נדרש עבור Chromium
+    # cap_drop:
+    #   - ALL
+    # cap_add:
+    #   - SYS_ADMIN  # נדרש עבור Chromium
     shm_size: '2gb'  # זיכרון משותף עבור Chromium
     logging:
       driver: "json-file"

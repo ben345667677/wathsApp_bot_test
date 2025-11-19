@@ -39,13 +39,9 @@ COPY . .
 # חשיפת פורט 5556 עבור שרת QR
 EXPOSE 5556
 
-# יצירת תיקייה לנתוני אימות
+# יצירת תיקייה לנתוני אימות עם הרשאות מלאות
 RUN mkdir -p .wwebjs_auth .wwebjs_cache && \
-    chown -R node:node /app && \
-    chmod -R 755 /app
-
-# לא מחליף משתמש - נשאר כ-root כדי למנוע בעיות הרשאות
-# USER node
+    chmod -R 777 .wwebjs_auth .wwebjs_cache
 
 # הרצת הבוט ישירות
 CMD ["node", "bot.js"]
