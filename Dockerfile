@@ -40,8 +40,12 @@ COPY . .
 EXPOSE 5556
 
 # יצירת תיקייה לנתוני אימות
-RUN mkdir -p .wwebjs_auth && \
-    chmod -R 777 .wwebjs_auth
+RUN mkdir -p .wwebjs_auth .wwebjs_cache && \
+    chown -R node:node /app && \
+    chmod -R 755 /app
+
+# החלפת משתמש ל-node
+USER node
 
 # הרצת הבוט
 CMD ["node", "bot.js"]
