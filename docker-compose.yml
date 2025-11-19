@@ -12,8 +12,8 @@ services:
       - NODE_ENV=production
       - TZ=Asia/Jerusalem
     # הרצה עם הרשאות מתאימות
-    security_opt:
-      - no-new-privileges:true
+    # security_opt:
+    #   - no-new-privileges:true
     cap_drop:
       - ALL
     cap_add:
